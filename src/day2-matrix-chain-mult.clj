@@ -21,7 +21,7 @@
 (defn matrix-chain-mult [chain]
   (letfn [(mem-table-size [chain]
             (dec (count chain)))
-          (table [n]
+          (init-table [n]
             (vec (repeat n (vec (repeat n 0)))))
           (table-lookup [table indexes]
             (nth (nth table (first indexes)) (second indexes)))
@@ -29,42 +29,33 @@
             (nth chain index))
           (update-table? [cost-table new-cost indexes]
             (< new-cost (table-lookup cost-table indexes)))
-          (update-cost [cost-table new-cost indexes update-table]
-            (if update-table
+          (update-cost [cost-table new-cost indexes do-update-table?]
+            (if do-update-table?
               (assoc-in cost-table indexes new-cost)
               cost-table))
-          (update-index [index-table new-cost-index indexes update-table]
-            (if update-table
+          (update-index [index-table new-cost-index indexes do-update-table?]
+            (if do-update-table?
               (assoc-in index-table indexes new-cost-index)
               index-table))
 
           ;; TODO: try trampoline!!!
           (compute-costs [tables chain i j]
             (loop [tables tables
-                   k i
-                   ;; update-table false
-                   ]
+                   k i]
               (if (= k j)
                 tables
-                (recur (let [new-cost (+ (table-lookup (:cost tables) [i k])
-                                         (table-lookup (:cost tables) [(inc k) j])
-                                         (chain-lookup chain i)
-                                         (chain-lookup chain (inc k))
-                                         (chain-lookup chain (inc j)))
-                             do-update? (update-table? (:cost tables) new-cost [i j])]
-                         (assoc tables
+                (let [next-k (inc k)
+                      next-j (inc j)
+                      new-cost (+ (table-lookup (:cost tables) [i k])
+                                  (table-lookup (:cost tables) [next-k j])
+                                  (*'(chain-lookup chain i)
+                                     (chain-lookup chain next-k)
+                                     (chain-lookup chain next-j)))
+                      do-update? (update-table? (:cost tables) new-cost [i j])]
+                  (recur (assoc tables
                                 :cost (update-cost (:cost tables) new-cost [i j] do-update?)
-                                :index (update-index (:index tables) k [i j] do-update?)))
-                       (inc k)))))
-
-          (init-costs [cost-table l n]
-            (let [end-index (- n l)]
-              (loop [cost-table cost-table
-                     i 0
-                     j l]
-                (if (= i end-index)
-                  cost-table
-                  (recur (assoc-in cost-table [i j] ##Inf) (inc i) (+ (inc i) l))))))
+                                :index (update-cost (:index tables) k [i j] do-update?))
+                         next-k)))))
 
           (run-compute-costs [tables chain l n]
             (let [end-index (- n l)]
@@ -73,17 +64,15 @@
                      j l]
                 (if (= i end-index)
                   tables
-                  (recur (compute-costs tables chain i j) (inc i) (+ (inc i) l))))))
+                  (let [tables (assoc-in tables [:cost i j] ##Inf)
+                        next-i (inc i)]
+                    (recur (compute-costs tables chain i j) next-i (+ next-i l)))))))
 
           (do-matrix-chain-mult [chain]
             (let [n (mem-table-size chain)
                   min-cost-indexes [0 (- n 1)]
-                  index-table (table n)
-                  cost-table (loop [cost-table (table n)
-                                    l 1]
-                               (if (= l n)
-                                 cost-table
-                                 (recur (init-costs cost-table l n) (inc l))))]
+                  index-table (init-table n)
+                  cost-table (init-table n)]
               (loop [tables {:cost cost-table :index index-table}
                      l 1]
                 (if (= l n)
@@ -91,13 +80,8 @@
                    :min-cost-indexes min-cost-indexes
                    :cost (:cost tables)
                    :index (:index tables)}
-                  (recur (run-compute-costs tables chain l n) (inc l))))))
-          ]
-    ;; (println (mem-table-size chain))
-    ;; (println (table (mem-table-size chain)))
-    (do-matrix-chain-mult chain)
-    )
-  )
+                  (recur (run-compute-costs tables chain l n) (inc l))))))]
+    (do-matrix-chain-mult chain)))
 
 (comment
   ;; min # multiplications = 0
@@ -107,6 +91,12 @@
   (def result (matrix-chain-mult [1 2 3 4]))
   (println (:min-cost result))
   ;; (reduce * (map * [1 2 3] [1 2 3]))
+
+  (def result (matrix-chain-mult [20 30 45 50]))
+  (println (:min-cost result))
+
+  (def result (matrix-chain-mult [30 35 15 5 10 20 25]))
+  (println (:min-cost result))
 
   (loop [i 0
          m {:a 0 :b 1}]
@@ -131,7 +121,9 @@
   (defn test-table-lookup [table indexes]
     (println (first indexes) (second indexes))
     (nth (nth table (first indexes)) (second indexes)))
-  (test-table-lookup (assoc-in [[0 0 0] [0 0 0]] [0 0] 1) [1 0])
+  (test-table-lookup (assoc-in [[0 0 0] [0 0 0]] [0 0] 1) [0 0]) ; 1
+  (test-table-lookup (assoc-in [[0 0 0] [0 0 0]] [1 0] 1) [1 0]) ; 1
+  (test-table-lookup (assoc-in [[0 0 0] [0 0 0]] [1 0] 1) [1 1]) ; 0
   (def p {:a 10 :b 20})
   (println p)
   (println (assoc p :a 40 :c 30))
