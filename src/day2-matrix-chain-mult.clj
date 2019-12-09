@@ -17,12 +17,13 @@
 ;; min_cost_indices = (0, n-1)
 ;; return cost_lists[min_cost_indices[0]][min_cost_indices[1]], min_cost_indices, cost_lists, index_lists
 
+(defn table-lookup [table indexes]
+  (nth (nth table (first indexes)) (second indexes)))
+
 ;; https://stackoverflow.com/questions/4112217/idiomatic-clojure-for-solving-dynamic-programming-algorithm
 (defn matrix-chain-mult [chain]
   (letfn [(init-table [n]
             (vec (repeat n (vec (repeat n 0)))))
-          (table-lookup [table indexes]
-            (nth (nth table (first indexes)) (second indexes)))
           (chain-lookup [chain index]
             (nth chain index))
           (update-table? [cost-table new-cost indexes]
@@ -75,20 +76,33 @@
                          (inc l))))))]
     (do-matrix-chain-mult chain)))
 
+(defn optimal-parens-string [index-lists indexes]
+  (let [i (first indexes)
+        j (second indexes)]
+    (if (= i j)
+      (format "A%d" i)
+      (let [min-index (table-lookup index-lists indexes)
+            p1 (optimal-parens-string index-lists [i min-index])
+            p2 (optimal-parens-string index-lists [(inc min-index) j])]
+        (format "(%s %s)" p1 p2)))))
+
 (comment
   ;; min # multiplications = 0
   (def result (matrix-chain-mult [2 2]))
   (println (:min-cost result))
   ;; min # of multiplications = 18
   (def result (matrix-chain-mult [1 2 3 4]))
-  (println (:min-cost result))
+  (println result)
+  (println (optimal-parens-string (:index result) (:min-cost-indexes result)))
   ;; (reduce * (map * [1 2 3] [1 2 3]))
 
   (def result (matrix-chain-mult [20 30 45 50]))
-  (println (:min-cost result))
+  (println result)
+  (println (optimal-parens-string (:index result) (:min-cost-indexes result)))
 
   (def result (matrix-chain-mult [30 35 15 5 10 20 25]))
-  (println (:min-cost result))
+  (println result)
+  (println (optimal-parens-string (:index result) (:min-cost-indexes result)))
 
   (loop [i 0
          m {:a 0 :b 1}]
