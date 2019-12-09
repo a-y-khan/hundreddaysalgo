@@ -30,8 +30,8 @@
           (update-tables [tables new-cost new-cost-index indexes]
             (let [cost-table (:cost tables)
                   index-table (:index tables)
-                  do-update-table? (update-table? cost-table new-cost indexes)]
-              (if do-update-table?
+                  do-update-table (update-table? cost-table new-cost indexes)]
+              (if do-update-table
                 (assoc tables :cost (assoc-in cost-table indexes new-cost)
                               :index (assoc-in index-table indexes new-cost-index))
                 tables)))
@@ -46,10 +46,8 @@
                                   (table-lookup (:cost tables) [next-k j])
                                   (*'(chain-lookup chain i)
                                      (chain-lookup chain next-k)
-                                     (chain-lookup chain next-j)))
-                      do-update? (update-table? (:cost tables) new-cost [i j])]
-                  (recur
-                   (update-tables tables new-cost k [i j])
+                                     (chain-lookup chain next-j)))]
+                  (recur (update-tables tables new-cost k [i j])
                          next-k)))))
           (run-compute-costs [tables chain l n]
             (let [end-index (- n l)]
