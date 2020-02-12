@@ -16,5 +16,6 @@
   (count-one-bits 2r1100011)
   (count-one-bits 2r11001100)
   (count-one-bits 2r11101101)
+  (println (-> 99 Integer/toBinaryString Integer/parseInt))
 
   )
