@@ -30,9 +30,8 @@
                 (if (>= 0 search-index)
                   (reverse input-values)
                   (let [pivot (dec search-index)
-                        swap-index (compute-swap-index pivot)
-                        permuted-values (swap input-values pivot swap-index)]
-                    (loop [permuted-values permuted-values
+                        swap-index (compute-swap-index pivot)]
+                    (loop [permuted-values (swap input-values pivot swap-index)
                            search-index search-index
                            swap-index last-index]
                       (if (< search-index swap-index)
