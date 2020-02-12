@@ -15,19 +15,19 @@
     (letfn [(compute-search-index []
               (loop [search-index last-index]
                 ; find largest non-increasing list member
-                (if (and (> search-index 0)
+                (if (and (< 0 search-index)
                          (<= 0 (compare-nth input-values (dec search-index) search-index)))
                   (recur (dec search-index))
                   search-index)))
             (compute-swap-index [pivot]
               (loop [swap-index last-index]
-                (if (and (>= swap-index 0)
+                (if (and (<= 0 swap-index)
                          (>= 0 (compare-nth input-values swap-index pivot)))
                   (recur (dec swap-index))
                   swap-index)))
             (do-next-permutation []
               (let [search-index (compute-search-index)]
-                (if (<= search-index 0)
+                (if (>= 0 search-index)
                   (reverse input-values)
                   (let [pivot (dec search-index)
                         swap-index (compute-swap-index pivot)
