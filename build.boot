@@ -3,7 +3,8 @@
 (set-env!
  :project project
  :resource-paths #{"src"}
- :dependencies '[[org.clojure/clojure "1.10.1"]])
+ :dependencies '[[org.clojure/clojure "1.10.1"]
+                 [org.clojure/test.check "1.0.0"]])
 
 (task-options!
  pom {:project 'hundreddaysalgo
