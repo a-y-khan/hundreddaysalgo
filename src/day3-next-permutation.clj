@@ -1,9 +1,13 @@
 (ns hundreddaysalgo.day3-next-permutation
-  (:require [clojure.string :as str]))
+  (:require [clojure.string :as str]
+            [clojure.spec.alpha :as s]))
 
 (defn swap [coll index1 index2]
   (assoc coll index1 (coll index2)
               index2 (coll index1)))
+(s/fdef swap
+  :args (s/cat :coll coll? :index1 int? :index2 int?)
+  :ret coll?)
 
 (defn compare-nth [coll index1 index2]
   (compare (nth coll index1)
@@ -40,14 +44,19 @@
                                (dec swap-index))
                         permuted-values))))))]
       (do-next-permutation))))
+(s/fdef next-permutation
+  :args (s/cat :input-values (s/coll-of number?))
+  :ret (s/coll-of number?))
 
 (comment
+  (s/valid? next-permutation [1 2 3])
+  (s/valid? next-permutation [:foo])
   (next-permutation [1 2 3])
+  (next-permutation [])
   (next-permutation [3 2 1])
   (next-permutation '(1 2 3))
   (next-permutation '(3 2 1))
   (next-permutation (str/split "FADE" #""))
   (next-permutation (str/split "FAED" #""))
   (next-permutation [0, 1, 2, 5, 3, 3, 0])
-
   )
