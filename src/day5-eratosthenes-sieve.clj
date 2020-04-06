@@ -16,7 +16,7 @@
             (nth (:primes primes) index))
           (count-primes [primes]
             (count (:primes primes)))
-          (update-primes [primes i]
+          (set-primes [primes i]
             (if (nth-is-primes primes i)
               (-> primes
                   (assoc :primes (conj-prime primes i))
@@ -24,9 +24,11 @@
               primes))
           (cleanup-primes [primes i j]
             (-> primes
+                ;; remove multiples of i * jth prime, which are (obviously) not prime
                 (assoc-in [:is-primes (* i (nth-primes primes j))] false)
+                ;; put smallest prime factor of i * jth prime
                 (assoc-in [:smallest-prime-factors (* i (nth-primes primes j))] (nth-primes primes j))))
-          (set-primes [primes i n]
+          (remove-prime-multiples [primes i n]
             (loop [primes primes
                    j 0]
               (if (and (< j (count-primes primes))
@@ -34,7 +36,6 @@
                        (<= (nth-primes primes j) (nth-smallest-prime-factor primes i)))
                 (recur (cleanup-primes primes i j) (inc j))
                 primes)))
-
           (compute-sieve [n]
             (loop
                 [primes {:is-primes (-> (vec (repeat n true))
@@ -44,12 +45,10 @@
                          :primes []}
                  i 2]
               (if (< i n)
-                (let [primes (update-primes primes i)]
-                  (recur (set-primes primes i n) (inc i)))
-                primes)))]
+                (let [primes (set-primes primes i)]
+                  (recur (remove-prime-multiples primes i n) (inc i)))
+                (:primes primes))))]
     (compute-sieve n)))
-(eratosthenes-sieve 3)
-
 (s/fdef eratosthenes-sieve
   :args (s/and (s/cat :n int?)
                #(>= (:n %) 0))
@@ -60,7 +59,16 @@
   (stest/check `eratosthenes-sieve)
   (s/exercise-fn `eratosthenes-sieve)
 
+  (s/valid? eratosthenes-sieve 3)
+  (s/conform eratosthenes-sieve 3)
+  (s/valid? eratosthenes-sieve 3.)
+  (s/conform eratosthenes-sieve 3.)
+  (s/valid? eratosthenes-sieve -1)
+  (s/conform eratosthenes-sieve -1)
+
+  (eratosthenes-sieve 3)
   (eratosthenes-sieve 9)
+  (eratosthenes-sieve 13)
   (eratosthenes-sieve 15)
   (eratosthenes-sieve 30)
 
@@ -83,5 +91,4 @@
     )
   (t 2)
   (t 3)
-
   )
