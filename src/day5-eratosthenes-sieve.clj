@@ -26,6 +26,14 @@
             (-> primes
                 (assoc-in [:is-primes (* i (nth-primes primes j))] false)
                 (assoc-in [:smallest-prime-factors (* i (nth-primes primes j))] (nth-primes primes j))))
+          (set-primes [primes i n]
+            (loop [primes primes
+                   j 0]
+              (if (and (< j (count-primes primes))
+                       (< (* i (nth-primes primes j)) n)
+                       (<= (nth-primes primes j) (nth-smallest-prime-factor primes i)))
+                (recur (cleanup-primes primes i j) (inc j))
+                primes)))
 
           (compute-sieve [n]
             (loop
@@ -37,23 +45,9 @@
                  i 2]
               (if (< i n)
                 (let [primes (update-primes primes i)]
-                  (loop [primes (update-primes primes i)
-                         j 0
-                         primes_count (count-primes primes)]
-                    (println i j primes_count primes)
-                    (if (and (< j primes_count)
-                             (< (* i (nth-primes primes j)) n)
-                             (<= (nth-primes primes j) (nth-smallest-prime-factor primes i)))
-                      (recur (cleanup-primes primes i j) (inc j) (count-primes primes))
-                      primes))
-                  (recur primes (inc i))
-                  )
-                primes)
-              ))
-          ]
-    (compute-sieve n)
-    )
-  )
+                  (recur (set-primes primes i n) (inc i)))
+                primes)))]
+    (compute-sieve n)))
 (eratosthenes-sieve 3)
 
 (s/fdef eratosthenes-sieve
