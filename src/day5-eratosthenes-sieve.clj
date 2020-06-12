@@ -71,24 +71,4 @@
   (eratosthenes-sieve 13)
   (eratosthenes-sieve 15)
   (eratosthenes-sieve 30)
-
-  (loop [i 0]
-    (when (< i 5)
-      (println i)
-      (recur (inc i))))
-  (loop [my-coll []
-         i 0]
-    (if (< i 5)
-      (recur (conj my-coll i) (inc i))
-      my-coll))
-  (if-let [x (> 5 1) y 10]
-    (println x y)
-    )
-  (defn t [n]
-    (letfn [(u [n] (* n 2))
-            (v [n] (* n n))]
-      (println (u n) (v n)))
-    )
-  (t 2)
-  (t 3)
   )
